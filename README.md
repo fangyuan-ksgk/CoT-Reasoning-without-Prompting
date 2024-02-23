@@ -41,4 +41,6 @@ k_follow_up_response = get_k_path_prob_follow_up(model, tokenizer, template.form
 ```
 
 
+<img width="851" alt="Screenshot 2024-02-23 at 08 37 31" src="https://github.com/fangyuan-ksgk/CoT-Reasoning-without-Prompting/assets/66006349/d30dcb38-e207-429e-a8d6-2f13c62a3503">
+
 
