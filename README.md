@@ -1,6 +1,8 @@
 # CoT-decoding
 Re-Implementation of Chain-of-Thought Decoding @DeepMind
 
+Great Work from Xuezhi Wang and Denny Zhou :->
+
 ![image](https://github.com/fangyuan-ksgk/CoT-decoding/assets/66006349/f248d3f9-3b3b-4820-a20d-f6f1f9e38595)
 
 Any HF model can be plugged-in and play
