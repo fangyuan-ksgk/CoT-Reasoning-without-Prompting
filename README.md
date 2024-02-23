@@ -1,5 +1,5 @@
 # CoT-decoding
-Reimplementation of Chain-of-Thought Decoding
+Re-Implementation of Chain-of-Thought Decoding
 
 ![image](https://github.com/fangyuan-ksgk/CoT-decoding/assets/66006349/f248d3f9-3b3b-4820-a20d-f6f1f9e38595)
 
