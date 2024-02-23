@@ -1,4 +1,4 @@
-# CoT-decoding
+# Chain-of-Thought Reasoning Without Prompting
 Re-Implementation of Chain-of-Thought Decoding @DeepMind
 
 Great Work from Xuezhi Wang and Denny Zhou :->
