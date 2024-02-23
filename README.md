@@ -5,10 +5,9 @@ Reimplementation of Chain-of-Thought Decoding
 
 Any HF model can be plugged-in and play
 
-"""```python
+```python
 query="A coin is heads up. Fletcher flips the coin. Conception flips the coin. Is the coin still heads up?"
-template = """[INST]{question}[/INST]
-               """
+template = """[INST]{question}[/INST]"""
 k_response = get_k_path_prob(model, tokenizer, template.format(question=query), k=5)
-"""
+```
 
