@@ -11,7 +11,8 @@ from tqdm.notebook import tqdm
 import re
 
 # model_name = "mistralai/Mistral-7B-v0.1"
-model_name = "mlabonne/Monarch-7B"
+# model_name = "mlabonne/Monarch-7B"
+model_name = "HuggingFaceH4/zephyr-7b-beta"
 # model_name = "mistralai/Mixtral-8x7B-v0.1"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
@@ -20,16 +21,18 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 --- Cool Function ---
 * Check the log probability of any response given a query | Given a huggingface Model & Tokenizer 
 """
-def check_response_logprob(model, tokenizer, query, target_response):
+def check_response_prob(model, tokenizer, query, target_response):
     inputs = tokenizer([query], return_tensors="pt")
-    gen_out = model.generate(**inputs, output_scores=True, return_dict_in_generate=True)
+    gen_out = model.generate(**inputs, output_scores=True, return_dict_in_generate=True, max_new_tokens=80, pad_token_id=tokenizer.eos_token_id)
 
     target_ids = tokenizer.encode(target_response)
     sum_of_logits = 0
+    sum_of_probs = 0
     for i, id in enumerate(target_ids):
-        sum_of_logits += gen_out.scores[i][0, id]
-
-    return sum_of_logits
+        prob = torch.nn.functional.softmax(gen_out.scores[i], dim=1)[0, id]
+        sum_of_probs += prob
+    avg_prob = sum_of_probs / len(target_ids)
+    return avg_prob
 
 
 """
@@ -140,4 +143,5 @@ def get_k_path_prob_follow_up(model, tokenizer, query, k, max_new_tokens=80,
         print('----'*5)
         k_response.append(path_probs)
     return k_response
+
 
