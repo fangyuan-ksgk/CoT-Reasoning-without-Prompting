@@ -10,9 +10,20 @@ from scipy.spatial import distance
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import KMeans
+import PIL
+from PIL import Image
 
-# Help me make the plotting graph more beautiful
-def plot_beautiful_embeddings(embeddings, title:str="Embedding PCA"):
+
+def fig2img(fig):
+    """Convert a Matplotlib figure to a PIL Image and return it"""
+    import io
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+    return img
+
+def plot_beautiful_embeddings(embeddings, title:str="Embedding PCA", draw=True):
     # Improve the aesthetics of the PCA scatter plot
     pca_result = PCA(n_components=2).fit_transform(embeddings)
     x = pca_result[:, 0]
@@ -32,7 +43,11 @@ def plot_beautiful_embeddings(embeddings, title:str="Embedding PCA"):
     for i, txt in enumerate(range(len(embeddings))):
         ax.annotate(txt, (x[i], y[i]), textcoords="offset points", xytext=(0,10), ha='center')
 
-    return fig  # Return the figure object
+    if not draw:
+        # print("Trying to close the figure")
+        plt.close(fig)
+
+    return fig2img(fig)
 
 # def plot_beautiful_embeddings(embeddings, title:str="Embedding PCA"):
 #     # Improve the aesthetics of the PCA scatter plot
@@ -143,3 +158,17 @@ class ClusterFilter:
             if distance < threshold_distance:
                 filtered_data.append(data[i])
         return np.array(filtered_data)    
+    
+    
+def present_filtering_result(embeddings, filtered_embeddings):
+    pre_filter_img = plot_beautiful_embeddings(embeddings, draw=False)
+    post_filter_img = plot_beautiful_embeddings(filtered_embeddings, draw=False)
+
+    # Concatenate the images side by side
+    combined_img = Image.new('RGB', (pre_filter_img.width + post_filter_img.width, pre_filter_img.height))
+    combined_img.paste(pre_filter_img, (0, 0))
+    combined_img.paste(post_filter_img, (pre_filter_img.width, 0))
+
+    # Display the combined image
+    combined_img.show()
+    return combined_img
