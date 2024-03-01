@@ -48,8 +48,16 @@ def single_choice_response(model, tokenizer, query, possible_answers):
     probs = [prob / norm_const for prob in unorm_probs]
     return probs
 
+query_template = """Compare customers' response in the two conversations: 
+    Conversation A: {conversation_a}
+    Conversation B: {conversation_b}
+    {compare_query}
+    Your answer: """
+
 def pairmatch_open(conversation_pairs: Tuple[str, str],
                    compare_attributes: List[str],
+                   query_template = query_template,
+                   possible_answers = ["Yes", "No", "Unsure"],
                    model = model,
                    tokenizer = tokenizer) -> List[dict]:
     """
