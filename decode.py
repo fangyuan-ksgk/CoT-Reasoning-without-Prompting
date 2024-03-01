@@ -9,6 +9,7 @@ import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 from tqdm.notebook import tqdm
 import re
+from typing import Tuple, List
 
 # model_name = "mistralai/Mistral-7B-v0.1"
 # model_name = "mlabonne/Monarch-7B"
@@ -21,9 +22,9 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 --- Cool Function ---
 * Check the log probability of any response given a query | Given a huggingface Model & Tokenizer 
 """
-def check_response_prob(model, tokenizer, query, target_response):
+def check_response_prob(model, tokenizer, query, target_response, max_required_tokens=80):
     inputs = tokenizer([query], return_tensors="pt")
-    gen_out = model.generate(**inputs, output_scores=True, return_dict_in_generate=True, max_new_tokens=80, pad_token_id=tokenizer.eos_token_id)
+    gen_out = model.generate(**inputs, output_scores=True, return_dict_in_generate=True, max_new_tokens=max_required_tokens, pad_token_id=tokenizer.eos_token_id)
 
     target_ids = tokenizer.encode(target_response)
     sum_of_logits = 0
@@ -33,6 +34,34 @@ def check_response_prob(model, tokenizer, query, target_response):
         sum_of_probs += prob
     avg_prob = sum_of_probs / len(target_ids)
     return avg_prob
+
+check_token_length = lambda word: len(tokenizer(word).input_ids)
+get_max_tokens_required = lambda words: max([check_token_length(word) for word in words])
+
+def single_choice_response(model, tokenizer, query, possible_answers):
+    max_tokens_required = get_max_tokens_required(possible_answers)
+    unorm_probs = []
+    for target_response in possible_answers:
+        prob = check_response_prob(model, tokenizer, query, target_response=target_response, max_required_tokens=max_tokens_required)
+        unorm_probs.append(prob)
+    norm_const = sum(unorm_probs)
+    probs = [prob / norm_const for prob in unorm_probs]
+    return probs
+
+def pairmatch_open(conversation_pairs: Tuple[str, str],
+                   compare_attributes: List[str],
+                   model = model,
+                   tokenizer = tokenizer) -> List[dict]:
+    """
+    Open-sourced LLM based Multi-Attribute Comparative Rater
+    """
+    results = []
+    for compare_attribute in compare_attributes:
+        query = query_template.format(compare_query=compare_attribute, conversation_a=conversation_pairs[0], conversation_b=conversation_pairs[1])
+        result = single_choice_response(model, tokenizer, query, possible_answers)
+        results.append(result)
+        
+    return results
 
 
 """
