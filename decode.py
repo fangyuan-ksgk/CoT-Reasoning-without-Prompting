@@ -54,6 +54,26 @@ query_template = """Compare customers' response in the two conversations:
     {compare_query}
     Your answer: """
 
+
+def form_comparative_score(list_of_prob):
+    if list_of_prob[2] > 0.3:
+        return [0.5,0.5]
+    else:
+        norm_const = list_of_prob[0]+list_of_prob[1]
+        return [list_of_prob[0]/norm_const, list_of_prob[1]/norm_const]
+    
+# Multi-Attributes Pairwise Comparison
+def multi_attributes_pairwise_comparison(model, tokenizer, compare_attributes, conversation_pairs):
+    pred_preferences = []
+    for i, compare_query in enumerate(compare_attributes):
+        query = query_template.format(compare_query=compare_query, conversation_a=conversation_pairs[0], conversation_b=conversation_pairs[1])
+        possible_answers = ["Yes", "No", "Unsure"]
+        compare_result = single_choice_response(model, tokenizer, query, possible_answers)
+        pred_preference = form_comparative_score(compare_result)
+        pred_preferences.append(pred_preference)
+    return pred_preferences
+
+
 def pairmatch_open(conversation_pairs: Tuple[str, str],
                    compare_attributes: List[str],
                    query_template = query_template,
