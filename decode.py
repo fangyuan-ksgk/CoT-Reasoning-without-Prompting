@@ -10,6 +10,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from tqdm.notebook import tqdm
 import re
 from typing import Tuple, List
+from preference import *
 
 # model_name = "mistralai/Mistral-7B-v0.1"
 # model_name = "mlabonne/Monarch-7B"
@@ -55,7 +56,7 @@ query_template = """Compare customers' response in the two conversations:
     Your answer: """
 
 
-def form_comparative_score(list_of_prob):
+def trinary_to_comparative_score(list_of_prob, possible_answers=["Yes", "No", "Unsure"]):
     if list_of_prob[2] > 0.3:
         return [0.5,0.5]
     else:
@@ -63,19 +64,19 @@ def form_comparative_score(list_of_prob):
         return [list_of_prob[0]/norm_const, list_of_prob[1]/norm_const]
     
 # Multi-Attributes Pairwise Comparison
-def multi_attributes_pairwise_comparison(model, tokenizer, compare_attributes, conversation_pairs):
+def multi_attributes_pairwise_comparison(model, tokenizer, compare_attributes, conversation_pairs,
+                                         query_template,
+                                         possible_answers):
     pred_preferences = []
     for i, compare_query in enumerate(compare_attributes):
         query = query_template.format(compare_query=compare_query, conversation_a=conversation_pairs[0], conversation_b=conversation_pairs[1])
-        possible_answers = ["Yes", "No", "Unsure"]
         compare_result = single_choice_response(model, tokenizer, query, possible_answers)
-        pred_preference = form_comparative_score(compare_result)
-        pred_preferences.append(pred_preference)
+        pred_preferences.append(compare_result)
     return pred_preferences
 
-
-def pairmatch_open(conversation_pairs: Tuple[str, str],
-                   compare_attributes: List[str],
+# Decoding-based Multi-Attribute Pairwise Comparison
+def pairmatch_decode(conversation_pairs: Tuple[str, str],
+                   requirements: Requirement,
                    query_template = query_template,
                    possible_answers = ["Yes", "No", "Unsure"],
                    model = model,
@@ -83,13 +84,13 @@ def pairmatch_open(conversation_pairs: Tuple[str, str],
     """
     Open-sourced LLM based Multi-Attribute Comparative Rater
     """
-    results = []
-    for compare_attribute in compare_attributes:
-        query = query_template.format(compare_query=compare_attribute, conversation_a=conversation_pairs[0], conversation_b=conversation_pairs[1])
-        result = single_choice_response(model, tokenizer, query, possible_answers)
-        results.append(result)
-        
+    compare_attributes = requirements.get_anno_compare_queries()
+    compare_names = requirements.get_attribute_names()
+    pred_preferenes = multi_attributes_pairwise_comparison(model, tokenizer, compare_attributes, conversation_pairs, query_template, possible_answers)
+    results = {name: trinary_to_comparative_score(pred) for (name, pred) in zip(compare_names, pred_preferenes)}
     return results
+
+
 
 
 """
